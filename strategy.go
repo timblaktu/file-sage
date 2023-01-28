@@ -28,34 +28,23 @@ func (c *StorageStrategyContext) scanTree() {
 	c.storageStrategy.scanTree(c)
 }
 
-// Concrete type that implements StorageStrategy interface for Local Storage
-type Local struct {
-	conf LocalConfig
-}
+// type EmptyContextError struct{}
+//
+// func (e *EmptyContextError) Error() string {
+// 	return fmt.Sprintf("Empty Context Specified for Strategy Pattern")
+// }
 
-func (s Local) scanTree(c *StorageStrategyContext) {
-	log.Println("scanning tree with Local strategy..")
-}
-
-// Concrete type that implements StorageStrategy interface for SmugMug
-type Smugmug struct {
-	conf SmugMugConfig
-}
-
-func (s Smugmug) scanTree(c *StorageStrategyContext) {
-	log.Println("scanning tree with Smugmug strategy..")
-}
-
-// Utility function to load concrete StorageStrategy instances from config spec
+// Utility function to load concrete StorageStrategy instances from config spec.
+// The slice returned is a singleton.
 func loadStorageStrategyContexts(c *Config) []*StorageStrategyContext {
 	var contexts []*StorageStrategyContext
-	if c.Local.Specified() {
+	if c.Local.Specified() && c.Local.Valid() == true {
 		contexts = append(contexts,
-			[]*StorageStrategyContext{NewStorageStrategyContext(Local{c.Local})}...)
+			[]*StorageStrategyContext{NewStorageStrategyContext(LocalStrategy{c.Local})}...)
 	}
-	if c.Smugmug.Specified() {
+	if c.Smugmug.Specified() && c.Smugmug.Valid() == true {
 		contexts = append(contexts,
-			[]*StorageStrategyContext{NewStorageStrategyContext(Smugmug{c.Smugmug})}...)
+			[]*StorageStrategyContext{NewStorageStrategyContext(SmugmugStrategy{c.Smugmug})}...)
 	}
 	if len(contexts) == 0 {
 		log.Fatalf("No Storage Strategies specified in config")
