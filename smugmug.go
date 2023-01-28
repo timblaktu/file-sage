@@ -1,6 +1,8 @@
 package main
 
-import "golang.org/x/exp/slog"
+import (
+	"golang.org/x/exp/slog"
+)
 
 // Concrete type that implements StorageStrategy interface for SmugMug
 type SmugmugStrategy struct {

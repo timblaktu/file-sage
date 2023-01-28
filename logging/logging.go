@@ -7,11 +7,11 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-func Init(lvl slog.Level) {
+func Init(l slog.Level) {
 	// https://pkg.go.dev/golang.org/x/exp/slog#HandlerOptions
 	opts := slog.HandlerOptions{
 		AddSource: false,
-		Level:     lvl,
+		Level:     l,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			// discard time attrs from log records
 			// if a.Key == slog.TimeKey {

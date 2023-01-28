@@ -1,11 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
+	"github.com/timblaktu/wupdedup/db"
 	"github.com/timblaktu/wupdedup/logging"
 	"golang.org/x/exp/slog"
+)
+
+const (
+	dbfile string = "wupdedup.bolt.db"
 )
 
 func init() {
@@ -19,11 +23,23 @@ func main() {
 
 	c := loadConfig()
 	contexts := loadStorageStrategyContexts(&c)
-	slog.Debug(fmt.Sprintf("%v", contexts))
+
+	d, err := db.Open(dbfile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer d.Close()
 	for _, context := range contexts {
-		slog.Debug(fmt.Sprintf("%v", context))
+		b, err := d.Bucket([]byte(context.name))
+		if err != nil {
+			log.Fatal(err)
+		}
+		context.SetBucket(b)
+	}
+
+	for _, context := range contexts {
 		context.scanTree()
 	}
 
-	log.Printf("main exiting..")
+	slog.Debug("main exiting..")
 }
