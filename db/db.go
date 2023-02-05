@@ -3,6 +3,7 @@ package db
 import (
 	"bytes"
 	"fmt"
+	"log"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/exp/slog"
@@ -15,6 +16,14 @@ import (
 // A DB embeds the exposed bolt.DB methods.
 type DB struct {
 	*bolt.DB
+}
+
+func Init(dbfile string) *DB {
+	d, err := Open(dbfile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return d
 }
 
 func Open(path string) (*DB, error) {

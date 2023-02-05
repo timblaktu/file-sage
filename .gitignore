@@ -8,5 +8,6 @@ export_presets.cfg
 .mono/
 data_*/
 
-**/*.env
+**/*.pprof
+**/trace.out
 *.db

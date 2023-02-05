@@ -5,36 +5,50 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/timblaktu/wupdedup/config"
 	"github.com/timblaktu/wupdedup/content"
 	"golang.org/x/exp/slog"
 )
 
 // Concrete type that implements StorageStrategy interface for Local Storage
 type LocalStrategy struct {
-	conf LocalConfig
+	conf config.LocalConfig
 }
+
+// var wg sync.WaitGroup
 
 func (s LocalStrategy) scanTree(c *StorageStrategyContext) {
 	slog.Info("scanning local tree..", "path", s.conf.RootPath)
-	filepath.WalkDir(s.conf.RootPath, walkdirFunc)
-	slog.Info("Done scanning local tree", "path", s.conf.RootPath)
-}
-
-func walkdirFunc(path string, d fs.DirEntry, err error) error {
-	if d.IsDir() {
-		slog.Debug("ignoring dir entry")
+	// fileSystem := os.DirFS(s.conf.RootPath)
+	// fs.WalkDir(fileSystem, ".", func(path string, d fs.DirEntry, err error) error {
+	filepath.WalkDir(s.conf.RootPath, func(path string, d fs.DirEntry, err error) error {
+		fi, _ := d.Info()
+		slog.Debug("visiting", "path", path, "de.name", d.Name(),
+			"de.isdir", d.IsDir(), "de.type", d.Type(), "fi.name", fi.Name(),
+			"fi.size", fi.Size(), "fi.mode", fi.Mode().String(),
+			"fi.modtime", fi.ModTime(), "fi.isdir", fi.IsDir(), "fi.sys", fi.Sys())
+		c.nodeCount++
+		// defer wg.Done()
+		if d.IsDir() {
+			slog.Debug("ignoring bc isdir")
+			return nil
+		}
+		c.fileCount++
+		fullPath := path
+		// fullPath := filepath.Join(d.Name(), path)
+		ft, err := getType(fullPath)
+		if err != nil {
+			return err
+		}
+		slog.Debug("visited", "fullPath", fullPath, "filetype", ft, "#nodes",
+			c.nodeCount, "#files", c.fileCount, "DirEntry", d)
 		return nil
-	}
-	ft, err := getType(path)
-	if err != nil {
-		return err
-	}
-	slog.Debug("visiting", "path", path, "ft", ft)
-	// TODO: customize walkdirfunc to allow passing in context object which contains bucket obj
-	// b.PutLocal()
-	return nil
+	})
+	slog.Info("Done scanning local tree", "path", s.conf.RootPath,
+		"#nodes", c.nodeCount, "#files", c.fileCount)
 }
 
+// TODO: optimize this - faster way to get file mime type?
 func getType(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {

@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/timblaktu/wupdedup/profiler"
 )
 
 type LocalConfig struct {
@@ -15,8 +16,6 @@ type LocalConfig struct {
 }
 
 func (c *LocalConfig) Specified() bool {
-	// Parens required around struct initializer to resolve parsing ambiguity
-	//   https://go.dev/ref/spec#Composite_literals
 	return *c != (LocalConfig{})
 }
 func (c *LocalConfig) Valid() bool {
@@ -45,8 +44,6 @@ type SmugMugConfig struct {
 }
 
 func (c *SmugMugConfig) Specified() bool {
-	// Parens required around struct initializer to resolve parsing ambiguity
-	//   https://go.dev/ref/spec#Composite_literals
 	return *c != (SmugMugConfig{})
 }
 
@@ -56,15 +53,17 @@ func (c *SmugMugConfig) Valid() bool {
 }
 
 type Config struct {
-	Debug   bool
-	Timeout time.Duration
-	HomeDir string
+	DBFile   string        `required:"false" split_words:"true" default:"wupdedup.bolt.db"`
+	LogLevel string        `required:"false" split_words:"true" default:"info"`
+	Timeout  time.Duration `required:"false" split_words:"true" default:"1m"`
+	// HomeDir  string `required:"false" split_words:"true" default:""`
+	Profile profiler.ProfileConfig
 	Local   LocalConfig
 	Smugmug SmugMugConfig
 }
 
 // The struct returned is a singleton.
-func loadConfig() Config {
+func LoadConfig() Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading configuration from .env file: %s", err.Error())
